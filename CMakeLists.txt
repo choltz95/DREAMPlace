@@ -12,7 +12,7 @@ endif(NOT CMAKE_BUILD_TYPE)
 message("-- CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
 if (NOT CMAKE_CUDA_FLAGS)
-    set(CMAKE_CUDA_FLAGS "-gencode=arch=compute_60,code=sm_60")
+    set(CMAKE_CUDA_FLAGS "-gencode=arch=compute_70,code=sm_70")
 endif()
 message("-- CMAKE_CUDA_FLAGS: ${CMAKE_CUDA_FLAGS}")
 
