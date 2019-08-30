@@ -14,6 +14,7 @@ import Params
 import dreamplace 
 import dreamplace.ops.place_io.place_io as place_io 
 import pdb 
+from pathlib import Path
 
 datatypes = {
         'float32' : np.float32, 
@@ -788,6 +789,14 @@ class PlaceDB (object):
         with open(pl_file, "w") as f:
             f.write(content)
         print("[I] write_pl takes %.3f seconds" % (time.time()-tt))
+        
+   def save(self, filepath='./db_', i=0):
+        filepath = Path(filepath+str(i))
+        if filepath.exists():
+            raise FileExistsError(f"cannot write dataset to '{filepath}'; file exists")
+        
+        with filepath.open('wb') as f:
+            pickle.dump(self, f)
 
     def write_nets(self, params, net_file):
         """
