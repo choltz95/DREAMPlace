@@ -99,7 +99,7 @@ class NonLinearPlace (BasicPlace.BasicPlace):
                 if params.gpu: 
                     torch.cuda.synchronize()
                 print("[I] %s initialization takes %g seconds" % (optimizer_name, (time.time()-tt)))
-
+                placement_hist = []
                 for step in range(model.iteration):
                     # metric for this iteration 
                     cur_metric = EvalMetrics.EvalMetrics(iteration)
@@ -145,6 +145,7 @@ class NonLinearPlace (BasicPlace.BasicPlace):
 
                     print(cur_metric)
                     # plot placement 
+                    placement_hist.append(self.pos[0].data.clone().cpu().numpy())
                     if params.plot_flag and iteration % 100 == 0: 
                         cur_pos = self.pos[0].data.clone().cpu().numpy()
                         self.plot(params, placedb, iteration, cur_pos)
@@ -158,7 +159,10 @@ class NonLinearPlace (BasicPlace.BasicPlace):
                     print("[I] full step %.3f ms" % ((time.time()-t0)*1000))
 
                 print("[I] optimizer %s takes %.3f seconds" % (optimizer_name, time.time()-tt))
-
+            with open('db.pkl', 'wb') as f:
+                pickle.dump(placedb, f)
+            with open('plot_hist.pkl', 'wb') as f:
+                pickle.dump(plot_hist, f)
         # legalization 
         if params.legalize_flag:
             tt = time.time()
