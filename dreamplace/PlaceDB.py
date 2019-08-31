@@ -14,6 +14,7 @@ import Params
 import dreamplace 
 import dreamplace.ops.place_io.place_io as place_io 
 import pdb 
+import pickle
 from pathlib import Path
 
 datatypes = {
