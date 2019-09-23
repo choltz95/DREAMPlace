@@ -11,12 +11,12 @@ DREAMPLACE_BEGIN_NAMESPACE
 
 template <typename T>
 int computeHPWLCudaAtomicLauncher(
-        const T* x, const T* y,
-        const int* pin2net_map,
-        const unsigned char* net_mask,
-        int num_nets,
-        int num_pins,
-        T* partial_hpwl_max,
+        const T* x, const T* y, 
+        const int* pin2net_map, 
+        const unsigned char* net_mask, 
+        int num_nets, 
+        int num_pins, 
+        T* partial_hpwl_max, 
         T* partial_hpwl_min
         );
 
@@ -24,16 +24,6 @@ int computeHPWLCudaAtomicLauncher(
 #define CHECK_EVEN(x) AT_ASSERTM((x.numel()&1) == 0, #x "must have even number of elements")
 #define CHECK_CONTIGUOUS(x) AT_ASSERTM(x.is_contiguous(), #x "must be contiguous")
 
-<<<<<<< HEAD
-/// @brief Compute half-perimeter wirelength
-/// @param pos cell locations, array of x locations and then y locations
-/// @param pin2net_map map pin to net
-/// @param net_mask an array to record whether compute the where for a net or not
-at::Tensor hpwl_atomic_forward(
-        at::Tensor pos,
-        at::Tensor pin2net_map,
-        at::Tensor net_mask)
-=======
 /// @brief Compute half-perimeter wirelength 
 /// @param pos cell locations, array of x locations and then y locations 
 /// @param pin2net_map map pin to net 
@@ -45,11 +35,10 @@ at::Tensor hpwl_atomic_forward(
         at::Tensor net_weights,
         at::Tensor net_mask
         ) 
->>>>>>> dd8174b407dbbe59e38c4df9459d483fb9a76cdc
 {
-    typedef int T;
+    typedef int T; 
 
-    CHECK_FLAT(pos);
+    CHECK_FLAT(pos); 
     CHECK_EVEN(pos);
     CHECK_CONTIGUOUS(pos);
     CHECK_FLAT(pin2net_map);
@@ -60,22 +49,22 @@ at::Tensor hpwl_atomic_forward(
     CHECK_CONTIGUOUS(net_mask);
 
     int num_nets = net_mask.numel();
-    // x then y
+    // x then y 
     at::Tensor scaled_pos = at::_cast_Int(pos.mul(1000), false);
-    at::Tensor partial_hpwl_max = at::zeros({2, num_nets}, scaled_pos.type());
-    at::Tensor partial_hpwl_min = at::zeros({2, num_nets}, scaled_pos.type());
+    at::Tensor partial_hpwl_max = at::zeros({2, num_nets}, scaled_pos.type()); 
+    at::Tensor partial_hpwl_min = at::zeros({2, num_nets}, scaled_pos.type()); 
     partial_hpwl_max[0].masked_fill_(net_mask, std::numeric_limits<T>::min());
     partial_hpwl_max[1].masked_fill_(net_mask, std::numeric_limits<T>::min());
     partial_hpwl_min[0].masked_fill_(net_mask, std::numeric_limits<T>::max());
     partial_hpwl_min[1].masked_fill_(net_mask, std::numeric_limits<T>::max());
 
     computeHPWLCudaAtomicLauncher<T>(
-            scaled_pos.data<T>(), scaled_pos.data<T>()+scaled_pos.numel()/2,
-            pin2net_map.data<int>(),
-            net_mask.data<unsigned char>(),
-            num_nets,
-            pin2net_map.numel(),
-            partial_hpwl_max.data<T>(),
+            scaled_pos.data<T>(), scaled_pos.data<T>()+scaled_pos.numel()/2, 
+            pin2net_map.data<int>(), 
+            net_mask.data<unsigned char>(), 
+            num_nets, 
+            pin2net_map.numel(), 
+            partial_hpwl_max.data<T>(), 
             partial_hpwl_min.data<T>()
             );
 
@@ -85,15 +74,6 @@ at::Tensor hpwl_atomic_forward(
 
     auto delta = partial_hpwl_max-partial_hpwl_min;
 
-<<<<<<< HEAD
-    const at::ScalarType& the_type = pos.scalar_type();
-    switch (the_type)
-    {
-        case at::ScalarType::Double:
-            return at::_cast_Double(hpwl).mul(1.0/1000);
-        case at::ScalarType::Float:
-            return at::_cast_Float(hpwl).mul(1.0/1000);
-=======
     const at::Type& the_type = pos.type();
     at::Tensor hpwl; 
     switch (the_type.scalarType())
@@ -104,20 +84,15 @@ at::Tensor hpwl_atomic_forward(
         case at::ScalarType::Float:
             hpwl = at::_cast_Float(delta, false);
             break; 
->>>>>>> dd8174b407dbbe59e38c4df9459d483fb9a76cdc
         default:
-            AT_ERROR("hpwl_atomic_forward", " not implemented for '", at::toString(the_type), "'");
+            AT_ERROR("hpwl_atomic_forward", " not implemented for '", the_type.toString(), "'"); 
     }
 
-<<<<<<< HEAD
-    return hpwl;
-=======
     if (net_weights.numel())
     {
         hpwl.mul_(net_weights.view({1, num_nets}));
     }
     return hpwl.sum().mul_(1.0/1000); 
->>>>>>> dd8174b407dbbe59e38c4df9459d483fb9a76cdc
 }
 
 DREAMPLACE_END_NAMESPACE
