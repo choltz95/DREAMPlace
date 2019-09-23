@@ -173,7 +173,7 @@ class NonLinearPlace (BasicPlace.BasicPlace):
             tmp = placedb.rawdb
             placedb.rawdb = None
             with open('db.pkl', 'wb') as f:
-                pickle.dump(pdtmp, f)
+                pickle.dump(placedb, f)
             placedb.rawdb = tmp
             with open('plot_hist.pkl', 'wb') as f:
                 pickle.dump(placement_hist, f)
