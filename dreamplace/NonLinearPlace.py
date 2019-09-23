@@ -156,7 +156,7 @@ class NonLinearPlace (BasicPlace.BasicPlace):
 
                     logging.info(cur_metric)
                     # plot placement 
-                    placement_hist.append(self.pos[0].data.clone().cpu().numpy())
+                    placement_hist.append(deepcopy(self.pos[0].data.clone().cpu().numpy()))
                     if params.plot_flag and iteration % 100 == 0: 
                         cur_pos = self.pos[0].data.clone().cpu().numpy()
                         self.plot(params, placedb, iteration, cur_pos)
