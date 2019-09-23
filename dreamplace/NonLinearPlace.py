@@ -169,6 +169,7 @@ class NonLinearPlace (BasicPlace.BasicPlace):
                     logging.info("full step %.3f ms" % ((time.time()-t0)*1000))
 
                 logging.info("optimizer %s takes %.3f seconds" % (optimizer_name, time.time()-tt))
+            del placedb.rawdb
             with open('db.pkl', 'wb') as f:
                 pickle.dump(placedb, f)
             with open('plot_hist.pkl', 'wb') as f:
