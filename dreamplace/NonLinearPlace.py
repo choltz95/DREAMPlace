@@ -24,6 +24,7 @@ import NesterovAcceleratedGradientOptimizer
 import LineSearch
 import EvalMetrics
 import pdb 
+from copy import deepcopy
 
 class NonLinearPlace (BasicPlace.BasicPlace):
     """
@@ -170,7 +171,7 @@ class NonLinearPlace (BasicPlace.BasicPlace):
 
                 logging.info("optimizer %s takes %.3f seconds" % (optimizer_name, time.time()-tt))
             with open('db.pkl', 'wb') as f:
-                pdtmp = placedb
+                pdtmp = deepcopy(placedb)
                 pdtmp.rawdb = None
                 pickle.dump(pdtmp, f)
             with open('plot_hist.pkl', 'wb') as f:
