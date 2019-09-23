@@ -170,10 +170,11 @@ class NonLinearPlace (BasicPlace.BasicPlace):
                     logging.info("full step %.3f ms" % ((time.time()-t0)*1000))
 
                 logging.info("optimizer %s takes %.3f seconds" % (optimizer_name, time.time()-tt))
+            tmp = placedb.rawdb
+            placedb.rawdb = None
             with open('db.pkl', 'wb') as f:
-                pdtmp = deepcopy(placedb)
-                pdtmp.rawdb = None
                 pickle.dump(pdtmp, f)
+            placedb.rawdb = tmp
             with open('plot_hist.pkl', 'wb') as f:
                 pickle.dump(placement_hist, f)
                 
