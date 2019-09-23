@@ -162,7 +162,7 @@ class NonLinearPlace (BasicPlace.BasicPlace):
             with open('db.pkl', 'wb') as f:
                 pickle.dump(placedb, f)
             with open('plot_hist.pkl', 'wb') as f:
-                pickle.dump(plot_hist, f)
+                pickle.dump(placement_hist, f)
         # legalization 
         if params.legalize_flag:
             tt = time.time()

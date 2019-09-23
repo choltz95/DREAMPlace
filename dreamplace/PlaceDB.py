@@ -791,7 +791,7 @@ class PlaceDB (object):
             f.write(content)
         print("[I] write_pl takes %.3f seconds" % (time.time()-tt))
         
-   def save(self, filepath='./db_', i=0):
+    def save(self, filepath='./db_', i=0):
         filepath = Path(filepath+str(i))
         if filepath.exists():
             raise FileExistsError(f"cannot write dataset to '{filepath}'; file exists")
