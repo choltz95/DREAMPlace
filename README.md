@@ -5,6 +5,8 @@ With the analogy between nonlinear VLSI placement and deep learning training pro
 The tool runs on both CPU and GPU. 
 Over 30X speedup over the CPU implementation ([RePlAce](https://doi.org/10.1109/TCAD.2018.2859220)) is achieved in global placement and legalization on ISPD 2005 contest benchmarks with a Nvidia Tesla V100 GPU. 
 
+DREAMPlace runs on both CPU and GPU. If it is installed on a machine without GPU, only CPU support will be enabled. 
+
 | Bigblue4 | Density Map | Electric Potential | Electric Field |
 | -------- | ----------- | ------------------ | -------------- |
 | <img src=/images/bigblue4-nofiller_SLD.gif width=250> | ![Density Map](images/density_map_SLD.gif) | ![Electric Potential Map](images/potential_map_SLD.gif) | ![Electric Field Map](images/field_map_SLD.gif) |
@@ -16,9 +18,13 @@ Over 30X speedup over the CPU implementation ([RePlAce](https://doi.org/10.1109/
   ACM/IEEE Design Automation Conference (DAC), Las Vegas, NV, Jun 2-6, 2019
   ([preprint](http://yibolin.com/publications/papers/PLACE_DAC2019_Lin.pdf)) ([slides](http://yibolin.com/publications/papers/PLACE_DAC2019_Lin.slides.pptx))
 
+* [Yibo Lin](http://yibolin.com), Zixuan Jiang, Jiaqi Gu, [Wuxi Li](http://wuxili.net), Shounak Dhar, Haoxing Ren, Brucek Khailany and [David Z. Pan](http://users.ece.utexas.edu/~dpan), 
+  "**DREAMPlace: Deep Learning Toolkit-Enabled GPU Acceleration for Modern VLSI Placement**", 
+  IEEE Transactions on Computer-Aided Design of Integrated Circuits and Systems (TCAD), 2020 (in submission)
+
 # Dependency 
 
-- Pytorch 0.4.1 or 1.0.0
+- Pytorch 1.0.0
 
 - Python 2.7 or Python 3.5
 
@@ -26,8 +32,9 @@ Over 30X speedup over the CPU implementation ([RePlAce](https://doi.org/10.1109/
     - Recommend GCC 5.1 or later. 
     - Other compilers may also work, but not tested. 
 
-- [Boost](www.boost.org)
+- [Boost](https://www.boost.org)
     - Need to install and visible for linking
+    - Need to be compiled with C++11 and same ```_GLIBCXX_USE_CXX11_ABI``` as PyTorch
 
 - [Limbo](https://github.com/limbo018/Limbo)
     - Integrated as a git submodule
@@ -82,7 +89,7 @@ make
 make install
 ```
 
-Third party submodules are automatically built except for [Boost](www.boost.org).
+Third party submodules are automatically built except for [Boost](https://www.boost.org).
 
 To clean, go to the root directory. 
 ```
@@ -129,4 +136,21 @@ python dreamplace/Placer.py --help
 # Authors
 
 * [Yibo Lin](http://yibolin.com), supervised by [David Z. Pan](http://users.ece.utexas.edu/~dpan), composed the initial release. 
+* [Zixuan Jiang](https://github.com/ZixuanJiang) and [Jiaqi Gu](https://github.com/JeremieMelo) improved the efficiency of the wirelength and density operators on GPU. 
 * **Pull requests to improve the tool are more than welcome.** We appreciate all kinds of contributions from the community. 
+
+# Features
+
+* [0.0.2](https://github.com/limbo018/DREAMPlace/releases/tag/0.0.2)
+    - Multi-thread CPU and optional GPU acceleration support 
+
+* [0.0.5](https://github.com/limbo018/DREAMPlace/releases/tag/0.0.5)
+    - Net weighting support through .wts files in Bookshelf format
+    - Incremental placement support
+
+* [0.0.6](https://github.com/limbo018/DREAMPlace/releases/tag/0.0.6)
+    - LEF/DEF support as input/output
+    - Python binding and access to C++ placement database
+
+* [1.0.0](https://github.com/limbo018/DREAMPlace/releases/tag/1.0.0)
+    - Improved efficiency for wirelength and density operators from TCAD extension

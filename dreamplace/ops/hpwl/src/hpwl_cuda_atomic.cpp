@@ -24,6 +24,7 @@ int computeHPWLCudaAtomicLauncher(
 #define CHECK_EVEN(x) AT_ASSERTM((x.numel()&1) == 0, #x "must have even number of elements")
 #define CHECK_CONTIGUOUS(x) AT_ASSERTM(x.is_contiguous(), #x "must be contiguous")
 
+<<<<<<< HEAD
 /// @brief Compute half-perimeter wirelength
 /// @param pos cell locations, array of x locations and then y locations
 /// @param pin2net_map map pin to net
@@ -32,6 +33,19 @@ at::Tensor hpwl_atomic_forward(
         at::Tensor pos,
         at::Tensor pin2net_map,
         at::Tensor net_mask)
+=======
+/// @brief Compute half-perimeter wirelength 
+/// @param pos cell locations, array of x locations and then y locations 
+/// @param pin2net_map map pin to net 
+/// @param net_weights weight of nets 
+/// @param net_mask an array to record whether compute the where for a net or not 
+at::Tensor hpwl_atomic_forward(
+        at::Tensor pos,
+        at::Tensor pin2net_map, 
+        at::Tensor net_weights,
+        at::Tensor net_mask
+        ) 
+>>>>>>> dd8174b407dbbe59e38c4df9459d483fb9a76cdc
 {
     typedef int T;
 
@@ -40,6 +54,10 @@ at::Tensor hpwl_atomic_forward(
     CHECK_CONTIGUOUS(pos);
     CHECK_FLAT(pin2net_map);
     CHECK_CONTIGUOUS(pin2net_map);
+    CHECK_FLAT(net_weights); 
+    CHECK_CONTIGUOUS(net_weights);
+    CHECK_FLAT(net_mask);
+    CHECK_CONTIGUOUS(net_mask);
 
     int num_nets = net_mask.numel();
     // x then y
@@ -65,8 +83,9 @@ at::Tensor hpwl_atomic_forward(
     //std::cout << "partial_hpwl_min = " << partial_hpwl_min << "\n";
     //std::cout << "partial_hpwl = \n" << (partial_hpwl_max-partial_hpwl_min)._cast_double().mul(1.0/1000) << "\n";
 
-    auto hpwl = at::_cast_Long(partial_hpwl_max-partial_hpwl_min, false).sum();
+    auto delta = partial_hpwl_max-partial_hpwl_min;
 
+<<<<<<< HEAD
     const at::ScalarType& the_type = pos.scalar_type();
     switch (the_type)
     {
@@ -74,11 +93,31 @@ at::Tensor hpwl_atomic_forward(
             return at::_cast_Double(hpwl).mul(1.0/1000);
         case at::ScalarType::Float:
             return at::_cast_Float(hpwl).mul(1.0/1000);
+=======
+    const at::Type& the_type = pos.type();
+    at::Tensor hpwl; 
+    switch (the_type.scalarType())
+    {
+        case at::ScalarType::Double:
+            hpwl = at::_cast_Double(delta, false); 
+            break; 
+        case at::ScalarType::Float:
+            hpwl = at::_cast_Float(delta, false);
+            break; 
+>>>>>>> dd8174b407dbbe59e38c4df9459d483fb9a76cdc
         default:
             AT_ERROR("hpwl_atomic_forward", " not implemented for '", at::toString(the_type), "'");
     }
 
+<<<<<<< HEAD
     return hpwl;
+=======
+    if (net_weights.numel())
+    {
+        hpwl.mul_(net_weights.view({1, num_nets}));
+    }
+    return hpwl.sum().mul_(1.0/1000); 
+>>>>>>> dd8174b407dbbe59e38c4df9459d483fb9a76cdc
 }
 
 DREAMPLACE_END_NAMESPACE

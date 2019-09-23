@@ -18,7 +18,7 @@ int computeWeightedAverageWirelengthCudaSparseLauncher(
         const unsigned char* net_mask, 
         int num_nets, 
         int num_pins, 
-        const T* gamma, 
+        const T* inv_gamma, 
         T* exp_xy, T* exp_nxy, 
         T* exp_xy_sum, T* exp_nxy_sum,
         T* xyexp_xy_sum, T* xyexp_nxy_sum,
@@ -27,6 +27,16 @@ int computeWeightedAverageWirelengthCudaSparseLauncher(
         const T* grad_tensor, 
         T* grad_x_tensor, T* grad_y_tensor // the gradient is partial total wirelength to partial pin position  
         );
+/// @brief add net weights to gradient 
+template <typename T>
+void integrateNetWeightsCudaLauncher(
+        const int* pin2net_map, 
+        const unsigned char* net_mask, 
+        const T* net_weights, 
+        T* grad_x_tensor, T* grad_y_tensor, 
+        int num_pins
+        );
+
 
 #define CHECK_FLAT(x) AT_ASSERTM(x.is_cuda() && x.ndimension() == 1, #x "must be a flat tensor on GPU")
 #define CHECK_EVEN(x) AT_ASSERTM((x.numel()&1) == 0, #x "must have even number of elements")
@@ -46,6 +56,7 @@ typedef int V;
 /// @param netpin_values an array with values 1, the length is equal to the number of pins. 
 /// @param pin2net_map an array mapping a pin to its net. 
 /// @param gamma gamma coefficient in weighted average wirelength. 
+/// @param net_weights weight of nets 
 /// @param net_mask a boolean mask to mask the nets that need to be computed. The value is 0 if a net should be ignored. 
 /// @return total wirelength cost with auxiliary tensors for backward propagation.
 std::vector<at::Tensor> weighted_average_wirelength_sparse_forward(
@@ -54,14 +65,17 @@ std::vector<at::Tensor> weighted_average_wirelength_sparse_forward(
         at::Tensor netpin_start, 
         at::Tensor netpin_values, // always 1
         at::Tensor pin2net_map, 
+        at::Tensor net_weights, 
         at::Tensor net_mask, 
-        at::Tensor gamma) 
+        at::Tensor inv_gamma) 
 {
     CHECK_FLAT(pos); 
     CHECK_EVEN(pos);
     CHECK_CONTIGUOUS(pos);
     CHECK_FLAT(pin2net_map);
     CHECK_CONTIGUOUS(pin2net_map);
+    CHECK_FLAT(net_weights);
+    CHECK_CONTIGUOUS(net_weights);
     CHECK_FLAT(net_mask);
     CHECK_CONTIGUOUS(net_mask);
 
@@ -93,7 +107,7 @@ std::vector<at::Tensor> weighted_average_wirelength_sparse_forward(
                     net_mask.data<unsigned char>(), 
                     num_nets, 
                     num_pins, 
-                    gamma.data<scalar_t>(), 
+                    inv_gamma.data<scalar_t>(), 
                     exp_xy.data<scalar_t>(), exp_nxy.data<scalar_t>(), 
                     exp_xy_sum.data<scalar_t>(), exp_nxy_sum.data<scalar_t>(),
                     xyexp_xy_sum.data<scalar_t>(), xyexp_nxy_sum.data<scalar_t>(), 
@@ -104,8 +118,12 @@ std::vector<at::Tensor> weighted_average_wirelength_sparse_forward(
                     );
             });
 
+    if (net_weights.numel())
+    {
+        partial_wl.mul_(net_weights.view({1, num_nets}));
+    }
     // significant speedup is achieved by using summation in ATen 
-    auto wl = at::sum(partial_wl); 
+    auto wl = partial_wl.sum(); 
     return {wl, exp_xy, exp_nxy, exp_xy_sum, exp_nxy_sum, xyexp_xy_sum, xyexp_nxy_sum}; 
 }
 
@@ -116,8 +134,9 @@ at::Tensor weighted_average_wirelength_sparse_backward(
         at::Tensor exp_xy_sum, at::Tensor exp_nxy_sum, 
         at::Tensor xyexp_xy_sum, at::Tensor xyexp_nxy_sum, 
         at::Tensor pin2net_map, 
+        at::Tensor net_weights, 
         at::Tensor net_mask, 
-        at::Tensor gamma) 
+        at::Tensor inv_gamma) 
 {
     CHECK_FLAT(pos); 
     CHECK_EVEN(pos);
@@ -142,8 +161,11 @@ at::Tensor weighted_average_wirelength_sparse_backward(
     CHECK_CONTIGUOUS(xyexp_nxy_sum);
     CHECK_FLAT(pin2net_map);
     CHECK_CONTIGUOUS(pin2net_map);
+    CHECK_FLAT(net_weights);
+    CHECK_CONTIGUOUS(net_weights);
     CHECK_FLAT(net_mask);
     CHECK_CONTIGUOUS(net_mask);
+
     at::Tensor grad_out = at::zeros_like(pos);
 
     int num_nets = net_mask.numel(); 
@@ -159,7 +181,7 @@ at::Tensor weighted_average_wirelength_sparse_backward(
                     net_mask.data<unsigned char>(), 
                     num_nets, 
                     num_pins, 
-                    gamma.data<scalar_t>(), 
+                    inv_gamma.data<scalar_t>(), 
                     exp_xy.data<scalar_t>(), exp_nxy.data<scalar_t>(), 
                     exp_xy_sum.data<scalar_t>(), exp_nxy_sum.data<scalar_t>(),
                     xyexp_xy_sum.data<scalar_t>(), xyexp_nxy_sum.data<scalar_t>(),
@@ -168,6 +190,16 @@ at::Tensor weighted_average_wirelength_sparse_backward(
                     grad_pos.data<scalar_t>(), 
                     grad_out.data<scalar_t>(), grad_out.data<scalar_t>()+num_pins
                     );
+            if (net_weights.numel())
+            {
+                integrateNetWeightsCudaLauncher(
+                        pin2net_map.data<int>(), 
+                        net_mask.data<unsigned char>(), 
+                        net_weights.data<scalar_t>(), 
+                        grad_out.data<scalar_t>(), grad_out.data<scalar_t>()+num_pins,
+                        num_pins 
+                    );
+            }
             });
     return grad_out; 
 }
