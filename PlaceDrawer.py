@@ -11,6 +11,7 @@ import time
 import math 
 import cairocffi as cairo 
 import numpy as np  
+from scipy.cluster.hierarchy import dendrogram, cut_tree, fcluster
 
 class PlaceDrawer (object):
     """
@@ -19,6 +20,8 @@ class PlaceDrawer (object):
     @staticmethod 
     def forward(
             pos, 
+            Z,
+            colmap,
             node_size_x, node_size_y, 
             pin_offset_x, pin_offset_y, 
             pin2node_map, 
@@ -49,6 +52,10 @@ class PlaceDrawer (object):
         @param filename output filename 
         @param iteration current optimization step 
         """
+        #fclust = fcluster(Z, 5, criterion='maxclust')
+        fclust = Z
+        #clust2col = [(0,0,1), (0,1,0), (1,0,0), (1,1,0), (1,0,1)]
+        clust2col = colmap
         num_nodes = len(pos)//2 
         num_movable_nodes = num_movable_nodes 
         num_filler_nodes = num_filler_nodes 
@@ -171,6 +178,7 @@ class PlaceDrawer (object):
             for i in range(num_movable_nodes, num_physical_nodes):
                 ctx.rectangle(node_xl[i], node_yl[i], node_xh[i]-node_xl[i], node_yh[i]-node_yl[i])  # Rectangle(xl, yl, w, h)
                 ctx.fill()
+            print('physical')
             ctx.set_source_rgba(0, 0, 0, alpha=1.0)  # Solid color
             for i in range(num_movable_nodes, num_physical_nodes):
                 draw_rect(node_xl[i], node_yl[i], node_xh[i], node_yh[i])
@@ -178,20 +186,32 @@ class PlaceDrawer (object):
             if len(node_xl) > num_physical_nodes: # filler is included 
                 ctx.set_line_width(line_width)
                 ctx.set_source_rgba(115/255.0, 115/255.0, 125/255.0, alpha=0.5)  # Solid color
+                print('macros design')
                 for i in range(num_physical_nodes, num_nodes):
                     ctx.rectangle(node_xl[i], node_yl[i], node_xh[i]-node_xl[i], node_yh[i]-node_yl[i])  # Rectangle(xl, yl, w, h)
                     ctx.fill()
                 ctx.set_source_rgba(230/255.0, 230/255.0, 250/255.0, alpha=0.3)  # Solid color
+                print('macros plot')
                 for i in range(num_physical_nodes, num_nodes):
                     draw_rect(node_xl[i], node_yl[i], node_xh[i], node_yh[i])
             # draw cells 
+            print('movable design')
             ctx.set_line_width(line_width*2)
-            ctx.set_source_rgba(0, 0, 1, alpha=0.5)  # Solid color
             for i in range(num_movable_nodes):
+                clust = fclust[i]
+                #ctx.set_source_rgba(0, 0, 1, alpha=0.5)  # Solid color
+                #col = clust2col[clust-1]
+                col = clust2col[clust]
+                ctx.set_source_rgba(col[0], col[1], col[2], alpha=0.5)  # Solid color
                 ctx.rectangle(node_xl[i], node_yl[i], node_xh[i]-node_xl[i], node_yh[i]-node_yl[i])  # Rectangle(xl, yl, w, h)
                 ctx.fill()
-            ctx.set_source_rgba(0, 0, 0.8, alpha=0.8)  # Solid color
+            #ctx.set_source_rgba(0, 0, 0.8, alpha=0.8)  # Solid color
+            print('movable plot')
             for i in range(num_movable_nodes):
+                clust = fclust[i]
+                #col = clust2col[clust-1]
+                col = clust2col[clust]
+                ctx.set_source_rgba(col[0], col[1], col[2], alpha=0.5)  # Solid color
                 draw_rect(node_xl[i], node_yl[i], node_xh[i], node_yh[i])
             ## draw cell indices 
             #for i in range(num_nodes): 

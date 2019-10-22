@@ -10,12 +10,15 @@ import sys
 import torch 
 from torch.autograd import Function
 
-import dreamplace.ops.draw_place.PlaceDrawer as PlaceDrawer 
+#import dreamplace.ops.draw_place.PlaceDrawer as PlaceDrawer 
+import PlaceDrawer
 
 class DrawPlaceFunction(Function):
     @staticmethod
     def forward(
             pos, 
+            Z,
+            colmap,
             node_size_x, node_size_y, 
             pin_offset_x, pin_offset_y, 
             pin2node_map, 
@@ -27,6 +30,8 @@ class DrawPlaceFunction(Function):
             ):
         ret = PlaceDrawer.PlaceDrawer.forward(
                 pos, 
+                Z,
+                colmap,
                 node_size_x, node_size_y, 
                 pin_offset_x, pin_offset_y, 
                 pin2node_map, 
@@ -62,13 +67,15 @@ class DrawPlace(object):
         self.num_movable_nodes = placedb.num_movable_nodes
         self.num_filler_nodes = placedb.num_filler_nodes
 
-    def forward(self, pos, filename): 
+    def forward(self, pos, Z, colmap, filename): 
         """ 
         @param pos cell locations, array of x locations and then y locations 
         @param filename suffix specifies the format 
         """
         return DrawPlaceFunction.forward(
                 pos, 
+                Z,
+                colmap,
                 self.node_size_x, 
                 self.node_size_y, 
                 self.pin_offset_x, 
